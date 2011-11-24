@@ -21,6 +21,48 @@
 #define MODE_REGEX 1
 #define MODE_SKIPSTART 2
 
+int tail_regex_unseekable(FILE *fp, char *pattern) {
+    regex_t re;
+    int i;
+    int rcv = regcomp(&re, pattern, REG_NOSUB | REG_NEWLINE | REG_EXTENDED);
+    if (rcv != 0) {
+        int len = regerror(rcv, &re, NULL, 0);
+        char *estr = malloc(len);
+        regerror(rcv, &re, estr, len);
+        fprintf(stderr, "Error compiling regex: %s\n");
+        exit(1);
+    }
+    int lines_size = 10;
+    int lines_pos = -1;
+    char **lines = malloc(sizeof(char*) * 10);
+    int *lines_sizes = malloc(sizeof(int) * 10);
+    for (i=0; i < lines_size; i++)
+        lines_sizes[i] = 0;
+    char *buf;
+    int size = 0;
+    while (-1 != getline(&buf, &size, fp)) {
+        if (0 == regexec(&re, buf, 0, NULL, 0)) {
+            lines_pos = 0;
+        }
+        if (lines_pos != -1) {
+            lines[lines_pos] = buf;
+            lines_sizes[lines_pos++] = size;
+            if (lines_pos == lines_size) {
+                lines_size *= 2;
+                lines = realloc(lines, sizeof(char*) * lines_size);
+                lines_sizes = realloc(lines_sizes, sizeof(int) * lines_size);
+                for (i=lines_size / 2; i<lines_size; i++)
+                    lines_sizes[i] = 0;
+            }
+            buf = lines[lines_pos];
+            size = lines_sizes[lines_pos];
+        }
+    }
+    for (i=0; i<lines_pos; i++)
+        printf("%s", lines[i]);
+    return 0;
+}
+
 int tail_regex(FILE *fp, char *pattern) {
     regex_t re;
     int rcv = regcomp(&re, pattern, REG_NOSUB | REG_NEWLINE | REG_EXTENDED);
@@ -109,7 +151,9 @@ int main(int argc, char **argv) {
     if (filename != NULL)
         fp = fopen(filename, "r");
     int rv;
-    if (mode == MODE_REGEX)
+    if (mode == MODE_REGEX && -1 == ftell(fp))
+        rv = tail_regex_unseekable(fp, regex);
+    else if (mode == MODE_REGEX)
         rv = tail_regex(fp, regex);
     if (mode == MODE_SKIPSTART)
         rv = tail_skipstart(fp, num_lines);
