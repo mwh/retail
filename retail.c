@@ -63,12 +63,27 @@ int tail_skipstart(FILE *fp, int numlines) {
     return 0;
 }
 
+int tail_follow(FILE *fp) {
+    char *buf;
+    int size = 0;
+    int v;
+    while (1) {
+        v = getline(&buf, &size, fp);
+        if (v != -1)
+            printf("%s", buf);
+        else
+            sleep(0.5);
+    }
+    return 0;
+}
+
 int main(int argc, char **argv) {
     int num_lines = -1;
     int first = 0;
     int last = 0;
     int i;
     int mode = MODE_NORMAL;
+    int follow = 0;
     char *filename = NULL;
     char *regex;
     for (i=1; i < argc; i++) {
@@ -84,6 +99,8 @@ int main(int argc, char **argv) {
                 argv[i][1] <= '9') {
             num_lines = atoi(argv[i] + 1);
             mode = MODE_SKIPSTART;
+        } else if (argv[i][0] == '-' && argv[i][1] == 'f') {
+            follow = 1;
         } else {
             filename = argv[i];
         }
@@ -96,8 +113,11 @@ int main(int argc, char **argv) {
         rv = tail_regex(fp, regex);
     if (mode == MODE_SKIPSTART)
         rv = tail_skipstart(fp, num_lines);
-    if (mode != MODE_NORMAL)
+    if (mode != MODE_NORMAL) {
+        if (follow)
+            tail_follow(fp);
         return rv;
+    }
     if (num_lines == -1)
         num_lines = 10;
     char *buf[num_lines + 1];
@@ -120,5 +140,7 @@ int main(int argc, char **argv) {
         if (i == num_lines)
             i = -1;
     }
+    if (follow)
+        tail_follow(fp);
     return 0;
 }
