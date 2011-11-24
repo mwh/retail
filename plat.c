@@ -4,12 +4,12 @@
 // GNU getline makes the code simpler and safer than the other
 // line-reading functions, but is an extension. This implements
 // the behaviour for other platforms.
-int getline(char **buf, int *size, FILE *fp) {
+size_t getline(char **buf, size_t *size, FILE *fp) {
     if (*buf == NULL || *size <= 0) {
         *buf = malloc(128);
         *size = 128;
     }
-    int pos = 0;
+    size_t pos = 0;
     char c;
     c = fgetc(fp);
     while (c != '\n' && c != EOF) {

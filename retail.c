@@ -38,11 +38,11 @@ int tail_regex_unseekable(FILE *fp, char *pattern) {
     int lines_size = 10;
     int lines_pos = -1;
     char **lines = malloc(sizeof(char*) * 10);
-    int *lines_sizes = malloc(sizeof(int) * 10);
+    size_t *lines_sizes = malloc(sizeof(size_t) * 10);
     for (i=0; i < lines_size; i++)
         lines_sizes[i] = 0;
     char *buf;
-    int size = 0;
+    size_t size = 0;
     while (-1 != getline(&buf, &size, fp)) {
         if (0 == regexec(&re, buf, 0, NULL, 0)) {
             lines_pos = 0;
@@ -53,7 +53,7 @@ int tail_regex_unseekable(FILE *fp, char *pattern) {
             if (lines_pos == lines_size) {
                 lines_size *= 2;
                 lines = realloc(lines, sizeof(char*) * lines_size);
-                lines_sizes = realloc(lines_sizes, sizeof(int) * lines_size);
+                lines_sizes = realloc(lines_sizes, sizeof(size_t) * lines_size);
                 for (i=lines_size / 2; i<lines_size; i++)
                     lines_sizes[i] = 0;
             }
@@ -77,7 +77,7 @@ int tail_regex(FILE *fp, char *pattern) {
         exit(1);
     }
     char *buf;
-    int size = 0;
+    size_t size = 0;
     long int tmppos = 0;
     long int matchpos = -1;
     tmppos = ftell(fp);
@@ -98,7 +98,7 @@ int tail_regex(FILE *fp, char *pattern) {
 
 int tail_skipstart(FILE *fp, int numlines) {
     char *buf;
-    int size = 0;
+    size_t size = 0;
     while (numlines > 0 && -1 != getline(&buf, &size, fp)) {
         numlines--;
     }
@@ -110,7 +110,7 @@ int tail_skipstart(FILE *fp, int numlines) {
 
 int tail_follow(FILE *fp) {
     char *buf;
-    int size = 0;
+    size_t size = 0;
     int v;
     while (1) {
         v = getline(&buf, &size, fp);
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
     if (num_lines == -1)
         num_lines = 10;
     char *buf[num_lines + 1];
-    int siz[num_lines + 1];
+    size_t siz[num_lines + 1];
     for (i=0; i<num_lines + 1; i++) {
         buf[i] = malloc(128);
         siz[i] = 128;
