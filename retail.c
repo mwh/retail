@@ -16,6 +16,9 @@
 #include <stdio.h>
 #include <regex.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "plat.c"
 
 #define MODE_NORMAL 0
 #define MODE_REGEX 1
