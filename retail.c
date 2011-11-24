@@ -29,7 +29,7 @@ int tail_regex_unseekable(FILE *fp, char *pattern) {
         int len = regerror(rcv, &re, NULL, 0);
         char *estr = malloc(len);
         regerror(rcv, &re, estr, len);
-        fprintf(stderr, "Error compiling regex: %s\n");
+        fprintf(stderr, "Error compiling regex: %s\n", estr);
         exit(1);
     }
     int lines_size = 10;
