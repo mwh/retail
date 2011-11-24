@@ -19,6 +19,7 @@
 
 #define MODE_NORMAL 0
 #define MODE_REGEX 1
+#define MODE_SKIPSTART 2
 
 int tail_regex(FILE *fp, char *pattern) {
     regex_t re;
@@ -50,6 +51,18 @@ int tail_regex(FILE *fp, char *pattern) {
     return 0;
 }
 
+int tail_skipstart(FILE *fp, int numlines) {
+    char *buf;
+    int size = 0;
+    while (numlines > 0 && -1 != getline(&buf, &size, fp)) {
+        numlines--;
+    }
+    while (-1 != getline(&buf, &size, fp)) {
+        printf("%s", buf);
+    }
+    return 0;
+}
+
 int main(int argc, char **argv) {
     int num_lines = -1;
     int first = 0;
@@ -64,9 +77,13 @@ int main(int argc, char **argv) {
             regex = argv[++i];
         } else if (argv[i][0] == '-' && argv[i][1] == 'n') {
             num_lines = atoi(argv[++i]);
-        } else if (argv[i][0] == '-' && argv[i][1] >= '0' && 
+        } else if (argv[i][0] == '-' && argv[i][1] >= '0' &&
                 argv[i][1] <= '9') {
             num_lines = atoi(argv[i] + 1);
+        } else if (argv[i][0] == '+' && argv[i][1] >= '0' &&
+                argv[i][1] <= '9') {
+            num_lines = atoi(argv[i] + 1);
+            mode = MODE_SKIPSTART;
         } else {
             filename = argv[i];
         }
@@ -74,8 +91,13 @@ int main(int argc, char **argv) {
     FILE *fp = stdin;
     if (filename != NULL)
         fp = fopen(filename, "r");
+    int rv;
     if (mode == MODE_REGEX)
-        return tail_regex(fp, regex);
+        rv = tail_regex(fp, regex);
+    if (mode == MODE_SKIPSTART)
+        rv = tail_skipstart(fp, num_lines);
+    if (mode != MODE_NORMAL)
+        return rv;
     if (num_lines == -1)
         num_lines = 10;
     char *buf[num_lines + 1];
