@@ -24,6 +24,19 @@
 #define MODE_REGEX 1
 #define MODE_SKIPSTART 2
 
+#define QUIT_REGEX 1
+
+int quit_mode = 0;
+regex_t quitre;
+
+void tail_quit(char *line) {
+    if (quit_mode & QUIT_REGEX) {
+        if (0 == regexec(&quitre, line, 0, NULL, 0)) {
+            exit(0);
+        }
+    }
+}
+
 int tail_regex_unseekable(FILE *fp, char *pattern) {
     regex_t re;
     int i;
@@ -91,6 +104,7 @@ int tail_regex(FILE *fp, char *pattern) {
         fseek(fp, matchpos, SEEK_SET);
         while (-1 != getline(&buf, &size, fp)) {
             printf("%s", buf);
+            tail_quit(buf);
         }
     }
     return 0;
@@ -104,6 +118,7 @@ int tail_skipstart(FILE *fp, int numlines) {
     }
     while (-1 != getline(&buf, &size, fp)) {
         printf("%s", buf);
+        tail_quit(buf);
     }
     return 0;
 }
@@ -114,9 +129,10 @@ int tail_follow(FILE *fp) {
     int v;
     while (1) {
         v = getline(&buf, &size, fp);
-        if (v != -1)
+        if (v != -1) {
             printf("%s", buf);
-        else
+            tail_quit(buf);
+        } else
             sleep(0.5);
     }
     return 0;
@@ -131,10 +147,13 @@ int main(int argc, char **argv) {
     int follow = 0;
     char *filename = NULL;
     char *regex;
+    char *quitregex = NULL;
     for (i=1; i < argc; i++) {
         if (argv[i][0] == '-' && argv[i][1] == 'r') {
             mode = MODE_REGEX;
             regex = argv[++i];
+        } else if (argv[i][0] == '-' && argv[i][1] == 'u') {
+            quitregex = argv[++i];
         } else if (argv[i][0] == '-' && argv[i][1] == 'n') {
             num_lines = atoi(argv[++i]);
         } else if (argv[i][0] == '-' && argv[i][1] >= '0' &&
@@ -149,6 +168,18 @@ int main(int argc, char **argv) {
         } else {
             filename = argv[i];
         }
+    }
+    if (quitregex != NULL) {
+        int rcv = regcomp(&quitre, quitregex,
+                REG_NOSUB | REG_NEWLINE | REG_EXTENDED);
+        if (rcv != 0) {
+            int len = regerror(rcv, &quitre, NULL, 0);
+            char *estr = malloc(len);
+            regerror(rcv, &quitre, estr, len);
+            fprintf(stderr, "Error compiling regex: %s\n", estr);
+            exit(1);
+        }
+        quit_mode |= QUIT_REGEX;
     }
     FILE *fp = stdin;
     if (filename != NULL)
