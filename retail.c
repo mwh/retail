@@ -64,6 +64,9 @@ int main(int argc, char **argv) {
             regex = argv[++i];
         } else if (argv[i][0] == '-' && argv[i][1] == 'n') {
             num_lines = atoi(argv[++i]);
+        } else if (argv[i][0] == '-' && argv[i][1] >= '0' && 
+                argv[i][1] <= '9') {
+            num_lines = atoi(argv[i] + 1);
         } else {
             filename = argv[i];
         }
