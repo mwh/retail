@@ -41,8 +41,12 @@ void tail_quit(char *line) {
 int tail_bytes(FILE *fp, long int num_bytes) {
     char buf[2048];
     int read;
-    fseek(fp, 0, SEEK_END);
-    fseek(fp, -num_bytes, SEEK_CUR);
+    if (num_bytes > 0) {
+        fseek(fp, 0, SEEK_END);
+        fseek(fp, -num_bytes, SEEK_CUR);
+    } else {
+        fseek(fp, -num_bytes, SEEK_SET);
+    }
     read = fread(buf, 1, 2048, fp);
     while (read == 2048) {
         fwrite(buf, 1, read, fp);
@@ -184,7 +188,10 @@ int main(int argc, char **argv) {
             num_lines = atoi(argv[i] + 1);
             mode = MODE_SKIPSTART;
         } else if (argv[i][0] == '-' && argv[i][1] == 'c') {
-            num_bytes = atoi(argv[++i]);
+            if (argv[i+1][0] == '+')
+                num_bytes = -atoi(argv[++i] + 1);
+            else
+                num_bytes = atoi(argv[++i]);
             mode = MODE_BYTES;
         } else if (argv[i][0] == '-' && argv[i][1] == 'f') {
             follow = 1;
