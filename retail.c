@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
         quit_mode |= QUIT_REGEX;
     }
     FILE *fp = stdin;
-    if (filename != NULL)
+    if (filename != NULL && strcmp(filename, "-") != 0)
         fp = fopen(filename, "r");
     if (ispipe(fp))
         follow = 0;
