@@ -1,5 +1,8 @@
 // Copyright (C) 2011 Michael Homer
 // Distributed under the GNU GPL 3.
+
+#include <sys/stat.h>
+
 #ifndef __GLIBC__
 // GNU getline makes the code simpler and safer than the other
 // line-reading functions, but is an extension. This implements
@@ -33,4 +36,18 @@ size_t getline(char **buf, size_t *size, FILE *fp) {
     return pos + 1;
 }
 #endif
+
+int ispipe(FILE *fp) {
+    int fd = fileno(fp);
+    struct stat st;
+    int r = fstat(fd, &st);
+    int pipea[2];
+    pipe(pipea);
+    struct stat pst;
+    fstat(pipea[0], &pst);
+    close(pipea[0]);
+    close(pipea[1]);
+    return (fd <= 0 && st.st_nlink <= pst.st_nlink &&
+            S_ISFIFO(st.st_mode));
+}
 

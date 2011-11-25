@@ -17,6 +17,7 @@
 #include <regex.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "plat.c"
 
@@ -214,6 +215,8 @@ int main(int argc, char **argv) {
     FILE *fp = stdin;
     if (filename != NULL)
         fp = fopen(filename, "r");
+    if (ispipe(fp))
+        follow = 0;
     int rv;
     if (mode == MODE_REGEX && -1 == ftell(fp))
         rv = tail_regex_unseekable(fp, regex);
