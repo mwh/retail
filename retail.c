@@ -23,6 +23,7 @@
 #define MODE_NORMAL 0
 #define MODE_REGEX 1
 #define MODE_SKIPSTART 2
+#define MODE_BYTES 3
 
 #define QUIT_REGEX 1
 
@@ -35,6 +36,20 @@ void tail_quit(char *line) {
             exit(0);
         }
     }
+}
+
+int tail_bytes(FILE *fp, long int num_bytes) {
+    char buf[2048];
+    int read;
+    fseek(fp, 0, SEEK_END);
+    fseek(fp, -num_bytes, SEEK_CUR);
+    read = fread(buf, 1, 2048, fp);
+    while (read == 2048) {
+        fwrite(buf, 1, read, fp);
+        read = fread(buf, 1, 2048, stdout);
+    }
+    fwrite(buf, 1, read, stdout);
+    return 0;
 }
 
 int tail_regex_unseekable(FILE *fp, char *pattern) {
@@ -140,6 +155,7 @@ int tail_follow(FILE *fp) {
 
 int main(int argc, char **argv) {
     int num_lines = -1;
+    int num_bytes = 0;
     int first = 0;
     int last = 0;
     int i;
@@ -163,6 +179,9 @@ int main(int argc, char **argv) {
                 argv[i][1] <= '9') {
             num_lines = atoi(argv[i] + 1);
             mode = MODE_SKIPSTART;
+        } else if (argv[i][0] == '-' && argv[i][1] == 'c') {
+            num_bytes = atoi(argv[++i]);
+            mode = MODE_BYTES;
         } else if (argv[i][0] == '-' && argv[i][1] == 'f') {
             follow = 1;
         } else {
@@ -191,6 +210,8 @@ int main(int argc, char **argv) {
         rv = tail_regex(fp, regex);
     if (mode == MODE_SKIPSTART)
         rv = tail_skipstart(fp, num_lines);
+    if (mode == MODE_BYTES)
+        rv = tail_bytes(fp, num_bytes);
     if (mode != MODE_NORMAL) {
         if (follow)
             tail_follow(fp);
