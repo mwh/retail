@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include "plat.c"
 
@@ -264,6 +265,11 @@ int main(int argc, char **argv) {
     FILE *fp = stdin;
     if (filename != NULL && strcmp(filename, "-") != 0)
         fp = fopen(filename, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "%s: error opening '%s': %s\n",
+                progname, filename, strerror(errno));
+        exit(1);
+    }
     if (ispipe(fp))
         follow = 0;
     int rv;
