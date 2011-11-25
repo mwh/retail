@@ -171,7 +171,11 @@ int main(int argc, char **argv) {
         } else if (argv[i][0] == '-' && argv[i][1] == 'u') {
             quitregex = argv[++i];
         } else if (argv[i][0] == '-' && argv[i][1] == 'n') {
-            num_lines = atoi(argv[++i]);
+            if (argv[i+1][0] == '+') {
+                num_lines = atoi(argv[++i] + 1);
+                mode = MODE_SKIPSTART;
+            } else
+                num_lines = atoi(argv[++i]);
         } else if (argv[i][0] == '-' && argv[i][1] >= '0' &&
                 argv[i][1] <= '9') {
             num_lines = atoi(argv[i] + 1);
