@@ -39,7 +39,7 @@ void tail_quit(char *line) {
     }
 }
 
-int tail_bytes(FILE *fp, long int num_bytes) {
+int tail_bytes(FILE *fp, long int num_bytes, int follow) {
     char buf[2048];
     int read;
     if (num_bytes > 0) {
@@ -50,10 +50,21 @@ int tail_bytes(FILE *fp, long int num_bytes) {
     }
     read = fread(buf, 1, 2048, fp);
     while (read == 2048) {
-        fwrite(buf, 1, read, fp);
-        read = fread(buf, 1, 2048, stdout);
+        fwrite(buf, 1, read, stdout);
+        read = fread(buf, 1, 2048, fp);
     }
     fwrite(buf, 1, read, stdout);
+    fflush(stdout);
+    if (follow) {
+        read = fread(buf, 1, 2048, fp);
+        while (1) {
+            fwrite(buf, 1, read, stdout);
+            fflush(stdout);
+            if (read <= 0)
+                sleep(0.5);
+            read = fread(buf, 1, 2048, fp);
+        }
+    }
     return 0;
 }
 
@@ -225,7 +236,7 @@ int main(int argc, char **argv) {
     if (mode == MODE_SKIPSTART)
         rv = tail_skipstart(fp, num_lines);
     if (mode == MODE_BYTES)
-        rv = tail_bytes(fp, num_bytes);
+        return tail_bytes(fp, num_bytes, follow);
     if (mode != MODE_NORMAL) {
         if (follow)
             tail_follow(fp);
