@@ -46,7 +46,7 @@ int tail_bytes(FILE *fp, long int num_bytes, int follow) {
         fseek(fp, 0, SEEK_END);
         fseek(fp, -num_bytes, SEEK_CUR);
     } else {
-        fseek(fp, -num_bytes, SEEK_SET);
+        fseek(fp, -num_bytes - 1, SEEK_SET);
     }
     read = fread(buf, 1, 2048, fp);
     while (read == 2048) {
