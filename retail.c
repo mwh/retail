@@ -78,7 +78,7 @@ int tail_regex_unseekable(FILE *fp, char *pattern) {
         int len = regerror(rcv, &re, NULL, 0);
         char *estr = malloc(len);
         regerror(rcv, &re, estr, len);
-        fprintf(stderr, "Error compiling regex: %s\n", estr);
+        fprintf(stderr, "%s: error compiling regex: %s\n", progname, estr);
         exit(1);
     }
     int lines_size = 10;
@@ -119,7 +119,7 @@ int tail_regex(FILE *fp, char *pattern) {
         int len = regerror(rcv, &re, NULL, 0);
         char *estr = malloc(len);
         regerror(rcv, &re, estr, len);
-        fprintf(stderr, "Error compiling regex: %s\n", estr);
+        fprintf(stderr, "%s: error compiling regex: %s\n", progname, estr);
         exit(1);
     }
     char *buf;
@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
             int len = regerror(rcv, &quitre, NULL, 0);
             char *estr = malloc(len);
             regerror(rcv, &quitre, estr, len);
-            fprintf(stderr, "Error compiling regex: %s\n", estr);
+            fprintf(stderr, "%s: error compiling regex: %s\n", progname, estr);
             exit(1);
         }
         quit_mode |= QUIT_REGEX;
