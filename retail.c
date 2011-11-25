@@ -29,6 +29,9 @@
 
 #define QUIT_REGEX 1
 
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 0
+
 int quit_mode = 0;
 regex_t quitre;
 
@@ -188,12 +191,24 @@ int help(char *progname) {
     puts("  -u REGEX   stop following file when a line matches extended");
     puts("             regular expression REGEX, and exit.");
     puts("  --help     display help and exit");
+    puts("  --version  display version information and exit");
     puts("");
     puts("The -r and -u options take an extended POSIX regular expression as");
     puts("argument. These expressions are matched against each line without");
     puts("implicit anchoring. ^ and $ will match the start and end of a line");
     puts("respectively. -u is meaningful only when joined with -f, and will");
     puts("output the matching line before terminating.");
+    return 0;
+}
+
+int version() {
+    printf("%s %i.%i\n", progname, VERSION_MAJOR, VERSION_MINOR);
+    puts("Copyright (C) 2011 Michael Homer.");
+    puts("Licenced under the GNU GPL version 3 or later.");
+    puts("This program comes with ABSOLUTELY NO WARRANTY.");
+    puts("This is free software, and you are welcome to redistribute it");
+    puts("under certain conditions; see the LICENCE file in the source or");
+    puts("<http://gnu.org/licenses/gpl.html> for details.");
     return 0;
 }
 
@@ -241,6 +256,9 @@ int main(int argc, char **argv) {
         } else if (strcmp(argv[i], "--help") == 0
                 || strcmp(argv[i], "-h") == 0) {
             return help(argv[0]);
+        } else if (strcmp(argv[i], "--version") == 0
+                || strcmp(argv[i], "-v") == 0) {
+            return version();
         } else if (argv[i][0] == '-' && argv[i][1] != 0) {
             fprintf(stderr, "%s: unrecognised option %s.\n", progname,
                     argv[i]);
