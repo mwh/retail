@@ -31,6 +31,8 @@
 int quit_mode = 0;
 regex_t quitre;
 
+char *progname;
+
 void tail_quit(char *line) {
     if (quit_mode & QUIT_REGEX) {
         if (0 == regexec(&quitre, line, 0, NULL, 0)) {
@@ -205,6 +207,9 @@ int main(int argc, char **argv) {
     char *filename = NULL;
     char *regex;
     char *quitregex = NULL;
+    for (i=0; i<strlen(argv[0]); i++)
+        if (argv[0][i] == '/')
+            progname = argv[0] + i + 1;
     for (i=1; i < argc; i++) {
         if (argv[i][0] == '-' && argv[i][1] == 'r') {
             mode = MODE_REGEX;
@@ -235,6 +240,11 @@ int main(int argc, char **argv) {
         } else if (strcmp(argv[i], "--help") == 0
                 || strcmp(argv[i], "-h") == 0) {
             return help(argv[0]);
+        } else if (argv[i][0] == '-' && argv[i][1] != 0) {
+            fprintf(stderr, "%s: unrecognised option %s.\n", progname,
+                    argv[i]);
+            fprintf(stderr, "Use `%s --help` for usage details.\n", argv[0]);
+            exit(1);
         } else {
             filename = argv[i];
         }
