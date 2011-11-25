@@ -41,13 +41,6 @@ int ispipe(FILE *fp) {
     int fd = fileno(fp);
     struct stat st;
     int r = fstat(fd, &st);
-    int pipea[2];
-    pipe(pipea);
-    struct stat pst;
-    fstat(pipea[0], &pst);
-    close(pipea[0]);
-    close(pipea[1]);
-    return (fd <= 0 && st.st_nlink <= pst.st_nlink &&
-            S_ISFIFO(st.st_mode));
+    return (fd <= 0 && S_ISFIFO(st.st_mode));
 }
 
