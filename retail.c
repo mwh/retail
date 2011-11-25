@@ -169,6 +169,31 @@ int tail_follow(FILE *fp) {
     return 0;
 }
 
+int help(char *progname) {
+    printf("Usage: %s [OPTION]... [FILE]\n", progname);
+    puts("Print the last 10 lines of FILE to standard output.");
+    puts("If no FILE given or FILE is -, use standard input.");
+    puts("");
+    puts("Options:");
+    puts("  -c N       print the last N bytes; -c +N will begin with");
+    puts("             the Nth byte");
+    puts("  -f         continue reading from file as data is appended");
+    puts("  -n N       output the last N lines; -n +N will begin with");
+    puts("             the Nth line");
+    puts("  -r REGEX   output lines beginning with last line matching");
+    puts("             extended regular expression REGEX");
+    puts("  -u REGEX   stop following file when a line matches extended");
+    puts("             regular expression REGEX, and exit.");
+    puts("  --help     display help and exit");
+    puts("");
+    puts("The -r and -u options take an extended POSIX regular expression as");
+    puts("argument. These expressions are matched against each line without");
+    puts("implicit anchoring. ^ and $ will match the start and end of a line");
+    puts("respectively. -u is meaningful only when joined with -f, and will");
+    puts("output the matching line before terminating.");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     int num_lines = -1;
     int num_bytes = 0;
@@ -207,6 +232,9 @@ int main(int argc, char **argv) {
             mode = MODE_BYTES;
         } else if (argv[i][0] == '-' && argv[i][1] == 'f') {
             follow = 1;
+        } else if (strcmp(argv[i], "--help") == 0
+                || strcmp(argv[i], "-h") == 0) {
+            return help(argv[0]);
         } else {
             filename = argv[i];
         }
