@@ -1,7 +1,7 @@
 include Makefile.conf
 
 all: retail
-retail: retail.c plat.c
+retail: retail.c
 	$(CC) -o retail retail.c
 
 install: all
