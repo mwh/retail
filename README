@@ -1,0 +1,44 @@
+retail - tail with regular expressions
+
+retail can output that part of a file (or pipe) following the last
+match of a regular expression, which can be useful for logfiles and
+various other kinds of data. It is also a fully compliant
+implementation of the POSIX.1-2008 tail command, so you can
+theoretically replace your system tail with it. retail is GPL3.
+
+To build:
+  ./configure
+  make
+  make install (optionally)
+By default, it installs into ~/.local/bin, but that can be changed
+using ./configure --prefix=/path/here.
+
+After that,
+  retail -r REGEX FILE
+will output that part of FILE starting at the last match of POSIX
+extended regular expression REGEX. If -u REGEX2 is also given, it
+will exit after outputting a line matching REGEX2. It also supports
+the standard options to tail, along with some extensions.
+
+Usage: ./retail [OPTION]... [FILE]
+Print the last 10 lines of FILE to standard output.
+If no FILE given or FILE is -, use standard input.
+
+Options:
+  -c N       print the last N bytes; -c +N will begin with
+             the Nth byte
+  -f         continue reading from file as data is appended
+  -n N       output the last N lines; -n +N will begin with
+             the Nth line
+  -r REGEX   output lines beginning with last line matching
+             extended regular expression REGEX
+  -u REGEX   stop following file when a line matches extended
+             regular expression REGEX, and exit.
+  --help     display help and exit
+  --version  display version information and exit
+
+The -r and -u options take an extended POSIX regular expression as
+argument. These expressions are matched against each line without
+implicit anchoring. ^ and $ will match the start and end of a line
+respectively. -u is meaningful only when joined with -f, and will
+output the matching line before terminating.
