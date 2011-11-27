@@ -70,7 +70,7 @@ int tail_bytes(FILE *fp, long int num_bytes, int follow) {
             fwrite(buf, 1, read, stdout);
             fflush(stdout);
             if (read <= 0)
-                sleep(0.5);
+                usleep(500000);
             read = fread(buf, 1, 2048, fp);
         }
     }
@@ -173,7 +173,7 @@ int tail_follow(FILE *fp) {
             printf("%s", buf);
             tail_quit(buf);
         } else
-            sleep(0.5);
+            usleep(500000);
     }
     return 0;
 }
