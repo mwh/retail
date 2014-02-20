@@ -19,6 +19,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <unistd.h>
 
 int ispipe(FILE *);
 #ifdef NEED_GETLINE
