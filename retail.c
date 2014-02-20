@@ -1,5 +1,5 @@
 // retail - tail with regular expressions
-// Copyright (C) 2011 Michael Homer
+// Copyright (C) 2011, 2014 Michael Homer
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ size_t getline(char **, size_t *, FILE *);
 #define QUIT_REGEX 1
 
 #define VERSION_MAJOR 0
-#define VERSION_MINOR 0
+#define VERSION_MINOR 1
 
 int quit_mode = 0;
 regex_t quitre;
@@ -206,7 +206,7 @@ int help(char *progname) {
 
 int version() {
     printf("%s %i.%i\n", progname, VERSION_MAJOR, VERSION_MINOR);
-    puts("Copyright (C) 2011 Michael Homer.");
+    puts("Copyright (C) 2011, 2014 Michael Homer.");
     puts("Licenced under the GNU GPL version 3 or later.");
     puts("This program comes with ABSOLUTELY NO WARRANTY.");
     puts("This is free software, and you are welcome to redistribute it");
