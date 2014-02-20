@@ -38,6 +38,9 @@ size_t getline(char **, size_t *, FILE *);
 int quit_mode = 0;
 regex_t quitre;
 
+// Output from the first occurrence of pattern, not the last.
+int print_from_first = 0;
+
 char *progname;
 
 void tail_quit(char *line) {
@@ -98,7 +101,8 @@ int tail_regex_unseekable(FILE *fp, char *pattern) {
     size_t size = 0;
     while (-1 != getline(&buf, &size, fp)) {
         if (0 == regexec(&re, buf, 0, NULL, 0)) {
-            lines_pos = 0;
+            if (!print_from_first || lines_pos == -1)
+                lines_pos = 0;
         }
         if (lines_pos != -1) {
             lines[lines_pos] = buf;
@@ -137,6 +141,8 @@ int tail_regex(FILE *fp, char *pattern) {
     while (-1 != getline(&buf, &size, fp)) {
         if (0 == regexec(&re, buf, 0, NULL, 0)) {
             matchpos = tmppos;
+            if (print_from_first)
+                break;
         }
         tmppos = ftell(fp);
     }
@@ -184,6 +190,7 @@ int help(char *progname) {
     puts("If no FILE given or FILE is -, use standard input.");
     puts("");
     puts("Options:");
+    puts("  -b         with -r, begin at first matching line, not last.");
     puts("  -c N       print the last N bytes; -c +N will begin with");
     puts("             the Nth byte");
     puts("  -f         continue reading from file as data is appended");
@@ -258,6 +265,8 @@ int main(int argc, char **argv) {
             mode = MODE_BYTES;
         } else if (argv[i][0] == '-' && argv[i][1] == 'f') {
             follow = 1;
+        } else if (argv[i][0] == '-' && argv[i][1] == 'b') {
+            print_from_first = 1;
         } else if (strcmp(argv[i], "--help") == 0
                 || strcmp(argv[i], "-h") == 0) {
             return help(argv[0]);

@@ -25,6 +25,7 @@ Print the last 10 lines of FILE to standard output.
 If no FILE given or FILE is -, use standard input.
 
 Options:
+  -b         with -r, begin at first matching line, not last.
   -c N       print the last N bytes; -c +N will begin with
              the Nth byte
   -f         continue reading from file as data is appended
