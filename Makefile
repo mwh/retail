@@ -7,5 +7,13 @@ retail: retail.c Makefile.conf
 install: all
 	install -m 0755 retail $(DESTDIR)$(PREFIX)/bin/retail
 
+clean:
+	rm -f retail Makefile.conf
+
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/retail
+
 Makefile.conf:
 	./configure
+
+.PHONY: all clean uninstall
