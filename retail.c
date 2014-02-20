@@ -21,7 +21,9 @@
 #include <errno.h>
 
 int ispipe(FILE *);
-#ifndef __GLIBC__
+#ifdef NEED_GETLINE
+// getline was only recently standardised and is implemented at the end
+// of the file; see there for more details.
 size_t getline(char **, size_t *, FILE *);
 #endif
 
@@ -406,10 +408,11 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-#ifndef __GLIBC__
+#ifdef NEED_GETLINE
 // GNU getline makes the code simpler and safer than the other
-// line-reading functions, but is an extension. This implements
-// the behaviour for other platforms.
+// line-reading functions, but is a GNU extension not
+// standardised until POSIX-2008. This implements the behaviour
+// for other platforms.
 size_t getline(char **buf, size_t *size, FILE *fp) {
     if (*buf == NULL || *size <= 0) {
         *buf = malloc(128);
