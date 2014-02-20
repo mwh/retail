@@ -229,6 +229,8 @@ int main(int argc, char **argv) {
     for (i=0; i<strlen(argv[0]); i++)
         if (argv[0][i] == '/')
             progname = argv[0] + i + 1;
+    if (!progname)
+        progname = argv[0];
     for (i=1; i < argc; i++) {
         if (argv[i][0] == '-' && argv[i][1] == 'r') {
             mode = MODE_REGEX;
