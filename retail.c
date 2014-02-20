@@ -25,24 +25,45 @@ int ispipe(FILE *);
 size_t getline(char **, size_t *, FILE *);
 #endif
 
+// There are four supported main modes of operation:
+// MODE_NORMAL is the default behaviour, printing the last N lines.
 #define MODE_NORMAL 0
+// MODE_REGEX is the novel part of retail, printing the lines after
+// a regular expression matches.
 #define MODE_REGEX 1
+// MODE_SKIPSTART implements the POSIX -n +N behaviour, printing
+// all lines after the first N are skipped.
 #define MODE_SKIPSTART 2
+// MODE_BYTES implements the POSIX -c N behaviour, where N is
+// interpreted as bytes.
 #define MODE_BYTES 3
 
+// There are currently only two supported termination modes:
+// The default is to terminate at the end of the file.
+// QUIT_REGEX, if set, causes the program to terminate on printing
+// a line matching a regular expression.
 #define QUIT_REGEX 1
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
 
+// If zero, terminate at the end of the file. If set to one of
+// the QUIT_* constants, override that behaviour.
 int quit_mode = 0;
+// In the QUIT_REGEX termination mode this regular expression
+// determines when to exit.
 regex_t quitre;
 
 // Output from the first occurrence of pattern, not the last.
 int print_from_first = 0;
 
+// The program name used to run is saved in progname.
 char *progname;
 
+// tail_quit is called with each output line to check whether
+// to terminate. It is called after printing the line.
+// If in QUIT_REGEX mode, checks the current line against
+// quitre, and terminates if it matches.
 void tail_quit(char *line) {
     if (quit_mode & QUIT_REGEX) {
         if (0 == regexec(&quitre, line, 0, NULL, 0)) {
@@ -51,6 +72,11 @@ void tail_quit(char *line) {
     }
 }
 
+// tail_bytes implements -c N (bytes) mode.
+// num_bytes is N; if it is negative it is relative to the
+// start of the file and indicates skipping that many bytes.
+// follow is 1 if the program should continue reading from
+// the file as it changes until killed.
 int tail_bytes(FILE *fp, long int num_bytes, int follow) {
     char buf[2048];
     int read;
@@ -80,6 +106,11 @@ int tail_bytes(FILE *fp, long int num_bytes, int follow) {
     return 0;
 }
 
+// tail_regex_unseekable implements -r for streams that are
+// unseekable, such as standard input and fifos. It caches
+// lines read in an array until it reaches the end of the
+// file and knows that these begin with the last matching
+// line.
 int tail_regex_unseekable(FILE *fp, char *pattern) {
     regex_t re;
     int i;
@@ -91,6 +122,9 @@ int tail_regex_unseekable(FILE *fp, char *pattern) {
         fprintf(stderr, "%s: error compiling regex: %s\n", progname, estr);
         exit(1);
     }
+    // The lines array will be resized dynamically if
+    // required. It is always lines_size long and the next
+    // line will go at lines_pos.
     int lines_size = 10;
     int lines_pos = -1;
     char **lines = malloc(sizeof(char*) * 10);
@@ -123,6 +157,10 @@ int tail_regex_unseekable(FILE *fp, char *pattern) {
     return 0;
 }
 
+// tail_regex implements -r for streams that are seekable,
+// such as ordinary files. It reads through the entire file
+// remembering the seek position of any matching line, and
+// returns to that location at the end to print from.
 int tail_regex(FILE *fp, char *pattern) {
     regex_t re;
     int rcv = regcomp(&re, pattern, REG_NOSUB | REG_NEWLINE | REG_EXTENDED);
@@ -135,7 +173,11 @@ int tail_regex(FILE *fp, char *pattern) {
     }
     char *buf;
     size_t size = 0;
+    // tmppos saves the position of the start of the most
+    // recent line, in case it matches.
     long int tmppos = 0;
+    // matchpos saves the position of the last matching line.
+    // Its value is copied from tmppos when the line matched.
     long int matchpos = -1;
     tmppos = ftell(fp);
     while (-1 != getline(&buf, &size, fp)) {
@@ -156,6 +198,9 @@ int tail_regex(FILE *fp, char *pattern) {
     return 0;
 }
 
+// tail_skipstart implements -n +N (skip from start) mode.
+// numlines is the number of lines to skip; it must be
+// non-negative.
 int tail_skipstart(FILE *fp, int numlines) {
     char *buf;
     size_t size = 0;
@@ -169,6 +214,9 @@ int tail_skipstart(FILE *fp, int numlines) {
     return 0;
 }
 
+// tail_follow implements -f (follow) behaviour for the
+// default mode. It keeps the file open and checks for new
+// lines every half a second.
 int tail_follow(FILE *fp) {
     char *buf;
     size_t size = 0;
@@ -184,6 +232,7 @@ int tail_follow(FILE *fp) {
     return 0;
 }
 
+// help outputs the --help text.
 int help(char *progname) {
     printf("Usage: %s [OPTION]... [FILE]\n", progname);
     puts("Print the last 10 lines of FILE to standard output.");
@@ -211,6 +260,7 @@ int help(char *progname) {
     return 0;
 }
 
+// version outputs the --version information.
 int version() {
     printf("%s %i.%i\n", progname, VERSION_MAJOR, VERSION_MINOR);
     puts("Copyright (C) 2011, 2014 Michael Homer.");
@@ -223,16 +273,22 @@ int version() {
 }
 
 int main(int argc, char **argv) {
+    // num_lines holds the argument given to -n, if any.
     int num_lines = -1;
+    // num_bytes holds the argument given to -c, if any.
     int num_bytes = 0;
+    // first and last are used by the default mode (below).
     int first = 0;
     int last = 0;
     int i;
     int mode = MODE_NORMAL;
+    // follow is set to 1 if -f was given.
     int follow = 0;
     char *filename = NULL;
     char *regex;
     char *quitregex = NULL;
+    // This loop computes progname for error and help outputs
+    // as the basename of argv[0].
     for (i=0; i<strlen(argv[0]); i++)
         if (argv[0][i] == '/')
             progname = argv[0] + i + 1;
@@ -282,6 +338,8 @@ int main(int argc, char **argv) {
             filename = argv[i];
         }
     }
+    // The quit regex is used repeatedly from multiple modes,
+    // so precalculate it now and set quit_mode to QUIT_REGEX.
     if (quitregex != NULL) {
         int rcv = regcomp(&quitre, quitregex,
                 REG_NOSUB | REG_NEWLINE | REG_EXTENDED);
@@ -302,6 +360,7 @@ int main(int argc, char **argv) {
                 progname, filename, strerror(errno));
         exit(1);
     }
+    // Following does not make sense with pipe inputs.
     if (ispipe(fp))
         follow = 0;
     int rv;
@@ -318,6 +377,8 @@ int main(int argc, char **argv) {
             tail_follow(fp);
         return rv;
     }
+    // The default behaviour of POSIX tail is implemented
+    // from here on.
     if (num_lines == -1)
         num_lines = 10;
     char *buf[num_lines + 1];
@@ -379,6 +440,7 @@ size_t getline(char **buf, size_t *size, FILE *fp) {
 }
 #endif
 
+// ispipe returns true if fp is a pipe and false otherwise.
 int ispipe(FILE *fp) {
     int fd = fileno(fp);
     struct stat st;
