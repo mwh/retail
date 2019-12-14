@@ -134,7 +134,7 @@ int tail_regex_unseekable(FILE *fp, char *pattern) {
     size_t *lines_sizes = malloc(sizeof(size_t) * 10);
     for (i=0; i < lines_size; i++)
         lines_sizes[i] = 0;
-    char *buf;
+    char *buf = 0;
     size_t size = 0;
     while (-1 != getline(&buf, &size, fp)) {
         if (0 == regexec(&re, buf, 0, NULL, 0)) {
@@ -174,7 +174,7 @@ int tail_regex(FILE *fp, char *pattern) {
         fprintf(stderr, "%s: error compiling regex: %s\n", progname, estr);
         exit(1);
     }
-    char *buf;
+    char *buf = 0;
     size_t size = 0;
     // tmppos saves the position of the start of the most
     // recent line, in case it matches.
@@ -205,7 +205,7 @@ int tail_regex(FILE *fp, char *pattern) {
 // numlines is the number of lines to skip; it must be
 // non-negative.
 int tail_skipstart(FILE *fp, int numlines) {
-    char *buf;
+    char *buf = 0;
     size_t size = 0;
     while (numlines > 0 && -1 != getline(&buf, &size, fp)) {
         numlines--;
@@ -221,7 +221,7 @@ int tail_skipstart(FILE *fp, int numlines) {
 // default mode. It keeps the file open and checks for new
 // lines every half a second.
 int tail_follow(FILE *fp) {
-    char *buf;
+    char *buf = 0;
     size_t size = 0;
     int v;
     while (1) {
