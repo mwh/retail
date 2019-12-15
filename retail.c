@@ -130,16 +130,22 @@ int tail_regex_unseekable(FILE *fp, char *pattern) {
     // line will go at lines_pos.
     int lines_size = 10;
     int lines_pos = -1;
-    char **lines = malloc(sizeof(char*) * 10);
-    size_t *lines_sizes = malloc(sizeof(size_t) * 10);
+    char **lines = calloc(lines_size, sizeof(char*));
+    size_t *lines_sizes = calloc(lines_size, sizeof(size_t));
     for (i=0; i < lines_size; i++)
         lines_sizes[i] = 0;
     char *buf = 0;
     size_t size = 0;
     while (-1 != getline(&buf, &size, fp)) {
         if (0 == regexec(&re, buf, 0, NULL, 0)) {
-            if (!print_from_first || lines_pos == -1)
+            if (!print_from_first || lines_pos == -1) {
+                if (lines_pos != -1) {
+                    // Need to swap buffers in the array
+                    // to avoid holding on to reallocated pointer.
+                    lines[lines_pos] = lines[0];
+                }
                 lines_pos = 0;
+            }
         }
         if (lines_pos != -1) {
             lines[lines_pos] = buf;
@@ -148,8 +154,10 @@ int tail_regex_unseekable(FILE *fp, char *pattern) {
                 lines_size *= 2;
                 lines = realloc(lines, sizeof(char*) * lines_size);
                 lines_sizes = realloc(lines_sizes, sizeof(size_t) * lines_size);
-                for (i=lines_size / 2; i<lines_size; i++)
+                for (i=lines_size / 2; i<lines_size; i++) {
                     lines_sizes[i] = 0;
+                    lines[i] = 0;
+                }
             }
             buf = lines[lines_pos];
             size = lines_sizes[lines_pos];
