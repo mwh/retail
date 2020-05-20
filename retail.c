@@ -398,7 +398,7 @@ int main(int argc, char **argv) {
         buf[i] = malloc(128);
         siz[i] = 128;
     }
-    while (-1 != getline(&buf[last], &siz[i], fp)) {
+    while (-1 != getline(&buf[last], &siz[last], fp)) {
         last++;
         if (last == num_lines + 1)
             last = 0;
